@@ -162,9 +162,10 @@ section.card > h2 .num{
 }
 .field input[type=text], .field input[type=date], .field input[type=number],
 .field input[type=time], .field select, .field textarea{
-  width:100%; padding:8px 10px; border-radius:8px;
+  width:100%; padding:11px 12px; border-radius:8px;
   border:1px solid var(--border); background:var(--surface-2);
-  color:var(--text); font:inherit; font-size:.88rem;
+  color:var(--text); font:inherit; font-size:.88rem; min-height:44px;
+  box-sizing:border-box;
 }
 .field textarea{resize:vertical; min-height:64px; font-family:inherit;}
 .field input:focus, .field select:focus, .field textarea:focus{
@@ -209,12 +210,14 @@ details.group summary .count{
 }
 .row:last-child{border-bottom:none;}
 .row .label{flex:1 1 240px; font-size:.87rem; min-width:180px;}
-.row .status{display:flex; gap:4px; flex-shrink:0;}
+.row .status{display:flex; gap:6px; flex-shrink:0;}
 .row .status input{position:absolute; opacity:0; width:1px; height:1px;}
 .row .status label{
-  font-size:.72rem; font-weight:600; padding:5px 10px; border-radius:7px;
+  font-size:.74rem; font-weight:600; padding:10px 12px; border-radius:7px;
   border:1px solid var(--border); color:var(--text-muted); cursor:pointer;
   background:var(--surface); user-select:none; white-space:nowrap;
+  min-height:40px; box-sizing:border-box;
+  display:inline-flex; align-items:center; justify-content:center;
 }
 .row .status input:focus-visible + label{outline:2px solid var(--teal); outline-offset:1px;}
 .row .status input[value="completo"]:checked + label{background:var(--success-bg); border-color:var(--success); color:var(--success);}
@@ -224,22 +227,27 @@ details.group summary .count{
   flex:1 1 100%; margin-top:2px;
 }
 .row .comment input{
-  width:100%; padding:6px 9px; border-radius:7px; border:1px solid var(--border);
+  width:100%; padding:10px 11px; border-radius:7px; border:1px solid var(--border);
   background:var(--surface); font-size:.8rem; color:var(--text);
+  min-height:40px; box-sizing:border-box;
 }
 .row.custom .label input{
-  width:100%; padding:6px 9px; border-radius:7px; border:1px solid var(--border);
+  width:100%; padding:10px 11px; border-radius:7px; border:1px solid var(--border);
   background:var(--surface); font-size:.85rem; color:var(--text);
+  min-height:40px; box-sizing:border-box;
 }
-.row .remove{
+.remove{
   flex-shrink:0; border:none; background:none; color:var(--critical);
-  cursor:pointer; font-size:.95rem; padding:4px 6px; line-height:1;
+  cursor:pointer; font-size:1.1rem; line-height:1; border-radius:8px;
+  min-width:40px; min-height:40px;
+  display:inline-flex; align-items:center; justify-content:center;
 }
+.remove:hover{background:var(--critical-bg);}
 
 .addrow-btn{
   margin-top:8px; border:1px dashed var(--teal); background:transparent;
   color:var(--teal-dark); font-weight:600; font-size:.8rem;
-  padding:7px 12px; border-radius:8px; cursor:pointer;
+  padding:10px 14px; border-radius:8px; cursor:pointer; min-height:40px;
 }
 .addrow-btn:hover{background:var(--teal-tint);}
 
@@ -249,7 +257,12 @@ details.group summary .count{
   font-family:'IBM Plex Mono', monospace; font-size:.78rem; color:var(--teal);
   padding-top:9px; width:20px; flex-shrink:0; text-align:right;
 }
-.acuerdo-row textarea{flex:1; min-height:42px;}
+.acuerdo-row textarea{
+  flex:1; min-height:44px; resize:vertical; font:inherit; font-size:.88rem;
+  padding:11px 12px; border-radius:8px; border:1px solid var(--border);
+  background:var(--surface-2); color:var(--text); box-sizing:border-box;
+}
+.acuerdo-row textarea:focus{outline:2px solid var(--teal); outline-offset:1px;}
 
 /* ---------- Resolution ---------- */
 .resolution{
@@ -305,7 +318,7 @@ footer.foot{
   .wrap{max-width:100%; padding-block:0;}
   .masthead{position:static; box-shadow:none;}
   section.card, .masthead{box-shadow:none; border:1px solid #ccc;}
-  .actionbar, .banner, .addrow-btn, .row .remove, .summary-box{display:none !important;}
+  .actionbar, .banner, .addrow-btn, .remove, .summary-box{display:none !important;}
   details.group{border:1px solid #ccc;}
   details.group > *:not(summary){display:block !important;}
   details.group summary::before{display:none;}
