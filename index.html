@@ -118,6 +118,17 @@ h1,h2,h3{
   font-size:.68rem; color:var(--text-muted);
   white-space:nowrap;
 }
+.theme-toggle{display:flex; gap:4px; flex-shrink:0;}
+.theme-toggle input{position:absolute; opacity:0; width:1px; height:1px;}
+.theme-toggle label{
+  font-size:.7rem; font-weight:600; padding:8px 11px; border-radius:7px;
+  border:1px solid var(--border); color:var(--text-muted); cursor:pointer;
+  background:var(--surface-2); user-select:none; white-space:nowrap;
+  min-height:36px; box-sizing:border-box;
+  display:inline-flex; align-items:center; justify-content:center; gap:4px;
+}
+.theme-toggle input:checked + label{background:var(--teal); border-color:var(--teal); color:#fff;}
+.theme-toggle input:focus-visible + label{outline:2px solid var(--teal); outline-offset:1px;}
 
 /* ---------- Banner (draft restore) ---------- */
 .banner{
@@ -264,6 +275,35 @@ details.group summary .count{
 }
 .acuerdo-row textarea:focus{outline:2px solid var(--teal); outline-offset:1px;}
 
+/* ---------- Asistencia (integrantes / invitados) ---------- */
+.attendee-row{
+  display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+  padding:9px 4px; border-bottom:1px solid var(--border);
+}
+.attendee-row:last-child{border-bottom:none;}
+.attendee-check{
+  display:inline-flex; align-items:center; gap:8px; cursor:pointer;
+  min-height:40px; flex-shrink:0; user-select:none; font-size:.78rem;
+  color:var(--text-muted); font-weight:600;
+}
+.attendee-check input[type=checkbox]{width:19px; height:19px; accent-color:var(--teal); cursor:pointer; flex-shrink:0;}
+.attendee-role{
+  flex:1 1 210px; font-size:.87rem; font-weight:600; color:var(--text);
+  min-width:170px;
+}
+.attendee-name{flex:1 1 220px; min-width:180px;}
+.attendee-name input{
+  width:100%; padding:10px 11px; border-radius:7px; border:1px solid var(--border);
+  background:var(--surface-2); color:var(--text); font-size:.85rem;
+  box-sizing:border-box; min-height:40px;
+}
+.invitado-row{display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:8px;}
+.invitado-row input{
+  flex:1 1 160px; min-width:140px; padding:10px 11px; border-radius:7px;
+  border:1px solid var(--border); background:var(--surface-2); color:var(--text);
+  font-size:.85rem; box-sizing:border-box; min-height:40px;
+}
+
 /* ---------- Resolution ---------- */
 .resolution{
   border-radius:12px; border:2px solid var(--border); padding:16px;
@@ -318,7 +358,7 @@ footer.foot{
   .wrap{max-width:100%; padding-block:0;}
   .masthead{position:static; box-shadow:none;}
   section.card, .masthead{box-shadow:none; border:1px solid #ccc;}
-  .actionbar, .banner, .addrow-btn, .remove, .summary-box{display:none !important;}
+  .actionbar, .banner, .addrow-btn, .remove, .summary-box, .theme-toggle{display:none !important;}
   details.group{border:1px solid #ccc;}
   details.group > *:not(summary){display:block !important;}
   details.group summary::before{display:none;}
@@ -328,6 +368,16 @@ footer.foot{
   footer.foot{margin-top:12px;}
 }
 </style>
+<script>
+(function(){
+  try{
+    var pref = localStorage.getItem("cima_theme_pref") || "auto";
+    if(pref === "light" || pref === "dark"){
+      document.documentElement.setAttribute("data-theme", pref);
+    }
+  } catch(e){}
+})();
+</script>
 </head>
 <body>
 <div class="wrap">
@@ -339,6 +389,14 @@ footer.foot{
       <div class="sub">Lista de verificación para presentación y dictamen de casos · CIMA</div>
     </div>
     <div class="draftbadge" id="draft-status"></div>
+    <div class="theme-toggle" role="group" aria-label="Tema de la página">
+      <input type="radio" name="theme-pref" id="theme-auto" value="auto" checked>
+      <label for="theme-auto">Auto</label>
+      <input type="radio" name="theme-pref" id="theme-light" value="light">
+      <label for="theme-light">Claro</label>
+      <input type="radio" name="theme-pref" id="theme-dark" value="dark">
+      <label for="theme-dark">Oscuro</label>
+    </div>
   </header>
 
   <div class="banner hide" id="restore-banner">
@@ -365,15 +423,23 @@ footer.foot{
       </div>
       <div class="field"><label for="f-presenta">Médico que presenta el caso</label><input type="text" id="f-presenta" data-field="medico_presenta"></div>
     </div>
-    <div class="field" style="margin-top:12px;">
-      <label for="f-asistentes">Integrantes / asistentes presentes</label>
-      <textarea id="f-asistentes" data-field="asistentes" placeholder="Director Médico, Subdirector Médico, Jefe de Trasplantes, Responsable del programa de T. Renal, vocales, coordinación de trasplante, invitados…"></textarea>
-    </div>
   </section>
 
-  <!-- 2. Identificación del paciente -->
+  <!-- 2. Asistencia -->
   <section class="card">
-    <h2><span class="num">2</span> Datos de identificación del paciente</h2>
+    <h2><span class="num">2</span> Asistencia: integrantes e invitados</h2>
+    <div class="hint">Marca quién asistió a la sesión y captura su nombre. Los cargos corresponden a la integración fija del subcomité.</div>
+    <div id="attendee-list"></div>
+
+    <h3 style="font-size:.85rem; font-weight:700; color:var(--teal-dark); margin:16px 0 6px;">Invitados</h3>
+    <div class="hint" style="margin-top:0;">Médicos u otro personal invitado a presentar o avalar el caso, sin ser integrantes fijos del subcomité.</div>
+    <div id="invitados-list"></div>
+    <button type="button" class="addrow-btn" id="btn-add-invitado">+ Agregar invitado</button>
+  </section>
+
+  <!-- 3. Identificación del paciente -->
+  <section class="card">
+    <h2><span class="num">3</span> Datos de identificación del paciente</h2>
     <div class="grid">
       <div class="field"><label for="f-nombre">Nombre completo</label><input type="text" id="f-nombre" data-field="nombre"></div>
       <div class="field"><label for="f-nac">Fecha de nacimiento</label><input type="date" id="f-nac" data-field="fecha_nacimiento"></div>
@@ -405,7 +471,7 @@ footer.foot{
 
   <!-- 3. Antropometría y grupo sanguíneo -->
   <section class="card">
-    <h2><span class="num">3</span> Datos antropométricos y grupo sanguíneo</h2>
+    <h2><span class="num">4</span> Datos antropométricos y grupo sanguíneo</h2>
     <div class="grid">
       <div class="field"><label for="f-peso">Peso (kg)</label><input type="number" step="0.1" min="0" id="f-peso" data-field="peso"></div>
       <div class="field"><label for="f-talla">Talla (cm)</label><input type="number" step="0.1" min="0" id="f-talla" data-field="talla"></div>
@@ -432,28 +498,28 @@ footer.foot{
 
   <!-- 4. Laboratorios -->
   <section class="card">
-    <h2><span class="num">4</span> Estudios de laboratorio</h2>
+    <h2><span class="num">5</span> Estudios de laboratorio</h2>
     <div class="hint">Marca el estatus de cada estudio revisado por el subcomité. Puedes agregar estudios adicionales al final de cada grupo.</div>
     <div id="lab-groups"></div>
   </section>
 
   <!-- 5. Imagen -->
   <section class="card">
-    <h2><span class="num">5</span> Estudios de imagen</h2>
+    <h2><span class="num">6</span> Estudios de imagen</h2>
     <div id="img-rows"></div>
     <button type="button" class="addrow-btn" data-add="img">+ Agregar estudio de imagen</button>
   </section>
 
   <!-- 6. Valoraciones por especialistas -->
   <section class="card">
-    <h2><span class="num">6</span> Valoraciones por especialistas</h2>
+    <h2><span class="num">7</span> Valoraciones por especialistas</h2>
     <div id="esp-rows"></div>
     <button type="button" class="addrow-btn" data-add="esp">+ Agregar valoración</button>
   </section>
 
   <!-- 7. Resumen clínico -->
   <section class="card">
-    <h2><span class="num">7</span> Resumen clínico</h2>
+    <h2><span class="num">8</span> Resumen clínico</h2>
     <div class="field"><label for="f-resumen">Resumen clínico presentado al subcomité</label>
       <textarea id="f-resumen" data-field="resumen_clinico" style="min-height:90px" placeholder="Síntesis del caso, protocolo cumplido, hallazgos relevantes…"></textarea>
     </div>
@@ -461,7 +527,7 @@ footer.foot{
 
   <!-- 8. Acuerdos -->
   <section class="card">
-    <h2><span class="num">8</span> Acuerdos y pendientes</h2>
+    <h2><span class="num">9</span> Acuerdos y pendientes</h2>
     <div class="hint">Estudios por repetir, valoraciones por integrar o correcciones solicitadas por el subcomité.</div>
     <div id="acuerdos-list"></div>
     <button type="button" class="addrow-btn" id="btn-add-acuerdo">+ Agregar acuerdo</button>
@@ -469,7 +535,7 @@ footer.foot{
 
   <!-- 9. Comentarios generales -->
   <section class="card">
-    <h2><span class="num">9</span> Comentarios generales</h2>
+    <h2><span class="num">10</span> Comentarios generales</h2>
     <div class="field">
       <textarea id="f-comentarios" data-field="comentarios_generales" style="min-height:90px" placeholder="Comentarios adicionales del subcomité, si los hay…"></textarea>
     </div>
@@ -477,7 +543,7 @@ footer.foot{
 
   <!-- 10. Resolución -->
   <section class="card">
-    <h2><span class="num">10</span> Resolución del subcomité</h2>
+    <h2><span class="num">11</span> Resolución del subcomité</h2>
     <div class="resolution" id="resolution-box">
       <div class="reso-options">
         <input type="radio" name="resolucion" id="res-aprobado" value="aprobado" data-field="resolucion">
@@ -578,6 +644,17 @@ var checklistData = {
   ]
 };
 
+var committeeRoles = [
+  {id:"director", label:"Director Médico"},
+  {id:"subdirector", label:"Subdirector Médico"},
+  {id:"jefe-trasplantes", label:"Jefe de Trasplantes"},
+  {id:"resp-tx-renal", label:"Responsable del programa de Trasplante Renal"},
+  {id:"vocal-1", label:"Vocal"},
+  {id:"vocal-2", label:"Vocal"},
+  {id:"vocal-3", label:"Vocal"},
+  {id:"coordinacion-tx", label:"Coordinación de Trasplante"}
+];
+
 var STATUS_LABELS = {completo:"Completo", incompleto:"Incompleto", na:"N/A"};
 
 function el(tag, cls, html){
@@ -615,7 +692,48 @@ function renderFixedList(container, items){
   });
 }
 
-// --- Section 4: laboratorios (grouped, collapsible) ---
+// --- Section 2: asistencia (integrantes fijos + invitados dinámicos) ---
+var attendeeListEl = document.getElementById("attendee-list");
+committeeRoles.forEach(function(role){
+  var row = el("div","attendee-row");
+
+  var checkLabel = el("label","attendee-check");
+  var chk = el("input");
+  chk.type="checkbox"; chk.id="asiste-"+role.id;
+  chk.setAttribute("data-field","asiste-"+role.id);
+  checkLabel.appendChild(chk);
+  checkLabel.appendChild(el("span", null, "Asistió"));
+
+  var roleDiv = el("div","attendee-role", role.label);
+
+  var nameWrap = el("div","attendee-name");
+  var nameInput = el("input");
+  nameInput.type="text"; nameInput.placeholder="Nombre"; nameInput.id="nombre-"+role.id;
+  nameInput.setAttribute("data-field","nombre-"+role.id);
+  nameWrap.appendChild(nameInput);
+
+  row.appendChild(checkLabel); row.appendChild(roleDiv); row.appendChild(nameWrap);
+  attendeeListEl.appendChild(row);
+});
+
+var invitadosListEl = document.getElementById("invitados-list");
+function addInvitado(){
+  var row = el("div","invitado-row");
+  var nameInput = el("input");
+  nameInput.type="text"; nameInput.placeholder="Nombre del invitado"; nameInput.className="invitado-name";
+  var motivoInput = el("input");
+  motivoInput.type="text"; motivoInput.placeholder="Motivo / cargo (ej. médico que presenta el caso)"; motivoInput.className="invitado-motivo";
+  var removeBtn = el("button","remove","✕");
+  removeBtn.type="button"; removeBtn.title="Quitar invitado";
+  removeBtn.addEventListener("click", function(){ row.remove(); });
+  row.appendChild(nameInput); row.appendChild(motivoInput); row.appendChild(removeBtn);
+  invitadosListEl.appendChild(row);
+  return row;
+}
+document.getElementById("btn-add-invitado").addEventListener("click", function(){ addInvitado(); });
+addInvitado();
+
+// --- Section 5: laboratorios (grouped, collapsible) ---
 var labGroupsEl = document.getElementById("lab-groups");
 checklistData.lab.forEach(function(g, gi){
   var det = el("details","group");
@@ -755,6 +873,29 @@ document.getElementById("f-peso").addEventListener("input", recalcIMC);
 document.getElementById("f-talla").addEventListener("input", recalcIMC);
 
 // --- Resolución: color de fondo dinámico ---
+// --- Tema: claro / oscuro / automático ---
+var THEME_KEY = "cima_theme_pref";
+function applyTheme(pref){
+  if(pref === "light" || pref === "dark"){
+    document.documentElement.setAttribute("data-theme", pref);
+  } else {
+    document.documentElement.removeAttribute("data-theme");
+  }
+}
+(function(){
+  var pref = "auto";
+  try{ pref = localStorage.getItem(THEME_KEY) || "auto"; }catch(e){}
+  var radio = document.querySelector('input[name="theme-pref"][value="'+pref+'"]');
+  if(radio) radio.checked = true;
+  applyTheme(pref);
+  document.querySelectorAll('input[name="theme-pref"]').forEach(function(r){
+    r.addEventListener("change", function(){
+      applyTheme(this.value);
+      try{ localStorage.setItem(THEME_KEY, this.value); }catch(e){}
+    });
+  });
+})();
+
 var resolutionBox = document.getElementById("resolution-box");
 document.querySelectorAll('input[name="resolucion"]').forEach(function(r){
   r.addEventListener("change", updateResolutionVisual);
@@ -781,7 +922,7 @@ function collectState(){
       values[node.getAttribute("data-field")] = node.value;
     }
   });
-  var dynamic = { lab:[], img:[], esp:[], acuerdos:[] };
+  var dynamic = { lab:[], img:[], esp:[], acuerdos:[], invitados:[] };
   document.querySelectorAll(".custom-lab-wrap").forEach(function(wrap, gi){
     Array.prototype.forEach.call(wrap.querySelectorAll(".row.custom"), function(row){
       dynamic.lab.push({ group: gi, name: row.querySelector(".custom-name").value,
@@ -798,6 +939,12 @@ function collectState(){
   });
   document.querySelectorAll("#acuerdos-list .acuerdo-row textarea").forEach(function(ta){
     dynamic.acuerdos.push(ta.value);
+  });
+  document.querySelectorAll("#invitados-list .invitado-row").forEach(function(row){
+    dynamic.invitados.push({
+      nombre: row.querySelector(".invitado-name").value,
+      motivo: row.querySelector(".invitado-motivo").value
+    });
   });
   return { savedAt: new Date().toISOString(), values: values, dynamic: dynamic };
 }
@@ -827,6 +974,14 @@ function applyState(state){
       state.dynamic.acuerdos.forEach(function(text){
         var row = addAcuerdo();
         row.querySelector("textarea").value = text;
+      });
+    }
+    if(state.dynamic.invitados && state.dynamic.invitados.length){
+      invitadosListEl.innerHTML = "";
+      state.dynamic.invitados.forEach(function(item){
+        var row = addInvitado();
+        row.querySelector(".invitado-name").value = item.nombre || "";
+        row.querySelector(".invitado-motivo").value = item.motivo || "";
       });
     }
     Object.keys(state.values || {}).forEach(function(field){
@@ -922,9 +1077,23 @@ function buildSummary(){
   out.push(line("Folio", v("f-folio")));
   out.push(line("Modalidad", v("f-modalidad")));
   out.push(line("Médico que presenta", v("f-presenta")));
-  out.push(line("Asistentes", v("f-asistentes")));
   out.push("");
-  out.push("2. IDENTIFICACIÓN DEL PACIENTE");
+  out.push("2. ASISTENCIA: INTEGRANTES E INVITADOS");
+  committeeRoles.forEach(function(role){
+    var asistio = document.getElementById("asiste-"+role.id).checked;
+    var nombre = document.getElementById("nombre-"+role.id).value;
+    out.push("  " + (asistio ? "[x]" : "[ ]") + " " + role.label + (nombre ? " — " + nombre : ""));
+  });
+  var invitados = Array.prototype.map.call(document.querySelectorAll("#invitados-list .invitado-row"), function(row){
+    var nombre = row.querySelector(".invitado-name").value.trim();
+    var motivo = row.querySelector(".invitado-motivo").value.trim();
+    return nombre ? (nombre + (motivo ? " — " + motivo : "")) : "";
+  }).filter(Boolean);
+  out.push("  Invitados:");
+  if(invitados.length){ invitados.forEach(function(inv){ out.push("    · " + inv); }); }
+  else out.push("    (sin invitados registrados)");
+  out.push("");
+  out.push("3. IDENTIFICACIÓN DEL PACIENTE");
   out.push(line("Nombre", v("f-nombre")));
   out.push(line("Fecha de nacimiento", v("f-nac")));
   out.push(line("Edad", v("f-edad")));
@@ -935,13 +1104,13 @@ function buildSummary(){
   out.push(line("Terapia renal sustitutiva", v("f-trsustitutiva")));
   out.push(line("Tipo de trasplante candidato", v("f-tipotx")));
   out.push("");
-  out.push("3. ANTROPOMETRÍA Y GRUPO SANGUÍNEO");
+  out.push("4. ANTROPOMETRÍA Y GRUPO SANGUÍNEO");
   out.push(line("Peso", v("f-peso") ? v("f-peso") + " kg" : ""));
   out.push(line("Talla", v("f-talla") ? v("f-talla") + " cm" : ""));
   out.push(line("IMC", v("f-imc") ? v("f-imc") + " (" + v("f-imc-clas") + ")" : ""));
   out.push(line("Grupo sanguíneo / Rh", [v("f-grupo"), v("f-rh")].filter(Boolean).join(" ")));
   out.push("");
-  out.push("4. ESTUDIOS DE LABORATORIO");
+  out.push("5. ESTUDIOS DE LABORATORIO");
   checklistData.lab.forEach(function(g){
     out.push("  " + g.group + ":");
     g.items.forEach(function(item){
@@ -957,7 +1126,7 @@ function buildSummary(){
     out.push("    · " + name + " — " + (st ? STATUS_LABELS[st.value] : "Sin marcar") + (cm ? " (" + cm + ")" : ""));
   });
   out.push("");
-  out.push("5. ESTUDIOS DE IMAGEN");
+  out.push("6. ESTUDIOS DE IMAGEN");
   checklistData.img.forEach(function(item){
     var c = commentText(item.id);
     out.push("  · " + item.label + " — " + statusText(item.id) + (c ? " (" + c + ")" : ""));
@@ -970,7 +1139,7 @@ function buildSummary(){
     out.push("  · " + name + " — " + (st ? STATUS_LABELS[st.value] : "Sin marcar") + (cm ? " (" + cm + ")" : ""));
   });
   out.push("");
-  out.push("6. VALORACIONES POR ESPECIALISTAS");
+  out.push("7. VALORACIONES POR ESPECIALISTAS");
   checklistData.esp.forEach(function(item){
     var c = commentText(item.id);
     out.push("  · " + item.label + " — " + statusText(item.id) + (c ? " (" + c + ")" : ""));
@@ -983,18 +1152,18 @@ function buildSummary(){
     out.push("  · " + name + " — " + (st ? STATUS_LABELS[st.value] : "Sin marcar") + (cm ? " (" + cm + ")" : ""));
   });
   out.push("");
-  out.push("7. RESUMEN CLÍNICO");
+  out.push("8. RESUMEN CLÍNICO");
   out.push(v("f-resumen") || "  (sin capturar)");
   out.push("");
-  out.push("8. ACUERDOS Y PENDIENTES");
+  out.push("9. ACUERDOS Y PENDIENTES");
   var acuerdos = Array.prototype.map.call(document.querySelectorAll("#acuerdos-list .acuerdo-row textarea"), function(t){ return t.value.trim(); }).filter(Boolean);
   if(acuerdos.length){ acuerdos.forEach(function(a,i){ out.push("  " + (i+1) + ". " + a); }); }
   else out.push("  (sin acuerdos registrados)");
   out.push("");
-  out.push("9. COMENTARIOS GENERALES");
+  out.push("10. COMENTARIOS GENERALES");
   out.push(v("f-comentarios") || "  (sin comentarios)");
   out.push("");
-  out.push("10. RESOLUCIÓN DEL SUBCOMITÉ");
+  out.push("11. RESOLUCIÓN DEL SUBCOMITÉ");
   var reso = document.querySelector('input[name="resolucion"]:checked');
   var resoText = reso ? {aprobado:"APROBADO", condicionado:"APROBADO CONDICIONADO", "no-aprobado":"NO APROBADO"}[reso.value] : "SIN DICTAMEN";
   out.push("  Dictamen: " + resoText);
